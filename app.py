@@ -19,7 +19,7 @@ def format_money(amount):
 # =========================
 # TIÊU ĐỀ
 # =========================
-st.title("💰 TỶ PHÚ TIỀN LẺ")
+st.title("💰 NGUYỄN KHÁNH NGÂN 2521003993")
 st.write("Tính toán tiền lãi theo phương pháp **lãi đơn** hoặc **lãi kép**.")
 
 st.divider()
