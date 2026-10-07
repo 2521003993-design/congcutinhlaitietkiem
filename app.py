@@ -247,6 +247,83 @@ if st.button("🧮 TÍNH TIỀN LÃI", use_container_width=True):
     )
 
     # =========================
+    # 🔎 CHỨC NĂNG MỚI:
+    # SO SÁNH LÃI ĐƠN VÀ LÃI KÉP
+    # =========================
+
+    st.divider()
+
+    st.subheader("🔎 So sánh Lãi đơn và Lãi kép")
+
+    # Tính tổng tiền theo LÃI ĐƠN
+    simple_total = principal + (
+        principal * annual_rate * years
+    )
+
+    # Tính tổng tiền theo LÃI KÉP
+    if payment_method == "Lãnh lãi theo tháng":
+
+        compound_total = (
+            principal * (1 + annual_rate / 12) ** term
+        )
+
+    elif payment_method == "Lãnh lãi theo quý":
+
+        compound_balance = principal
+
+        for _ in range(periods):
+            compound_balance *= (1 + annual_rate / 4)
+
+        if remaining_months > 0:
+            compound_balance += (
+                compound_balance
+                * annual_rate
+                * remaining_months
+                / 12
+            )
+
+        compound_total = compound_balance
+
+    else:
+
+        compound_total = (
+            principal * (1 + annual_rate / 12) ** term
+        )
+
+    compare_col1, compare_col2 = st.columns(2)
+
+    with compare_col1:
+        st.metric(
+            "💵 Tổng tiền - Lãi đơn",
+            format_money(simple_total)
+        )
+
+    with compare_col2:
+        st.metric(
+            "📈 Tổng tiền - Lãi kép",
+            format_money(compound_total)
+        )
+
+    difference = compound_total - simple_total
+
+    if difference > 0:
+        st.success(
+            f"📈 Với khoản gửi này, **lãi kép cao hơn lãi đơn "
+            f"{format_money(difference)}**."
+        )
+
+    elif difference < 0:
+        st.info(
+            f"💵 Với khoản gửi này, **lãi đơn cao hơn lãi kép "
+            f"{format_money(abs(difference))}**."
+        )
+
+    else:
+        st.info(
+            "⚖️ Hai phương pháp cho kết quả bằng nhau."
+        )
+
+    # =========================
     # CHI TIẾT
     # =========================
 
