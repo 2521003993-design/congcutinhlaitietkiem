@@ -247,7 +247,7 @@ if st.button("🧮 TÍNH TIỀN LÃI", use_container_width=True):
     )
 
     # =========================
-    # 🔎 CHỨC NĂNG MỚI:
+    # 🔎 CHỨC NĂNG:
     # SO SÁNH LÃI ĐƠN VÀ LÃI KÉP
     # =========================
 
@@ -321,6 +321,213 @@ if st.button("🧮 TÍNH TIỀN LÃI", use_container_width=True):
     else:
         st.info(
             "⚖️ Hai phương pháp cho kết quả bằng nhau."
+        )
+
+    # =====================================================
+    # 📈 CHỨC NĂNG MỚI 1:
+    # BIỂU ĐỒ TĂNG TRƯỞNG TIỀN THEO THỜI GIAN
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("📈 Biểu đồ tăng trưởng khoản tiền")
+
+    st.write(
+        "Biểu đồ mô phỏng sự thay đổi của số tiền theo từng tháng "
+        "trong thời gian gửi."
+    )
+
+    simple_growth = []
+    compound_growth = []
+
+    simple_balance = principal
+    compound_balance_chart = principal
+
+    for month in range(1, term + 1):
+
+        # Lãi đơn tăng đều mỗi tháng
+        simple_balance = (
+            principal
+            + principal * annual_rate * month / 12
+        )
+
+        simple_growth.append(simple_balance)
+
+        # Lãi kép
+        if payment_method == "Lãnh lãi theo quý":
+
+            if month % 3 == 0:
+                compound_balance_chart *= (
+                    1 + annual_rate / 4
+                )
+
+            elif month == term and month % 3 != 0:
+                remaining = month % 3
+                compound_balance_chart += (
+                    compound_balance_chart
+                    * annual_rate
+                    * remaining
+                    / 12
+                )
+
+        else:
+
+            compound_balance_chart *= (
+                1 + annual_rate / 12
+            )
+
+        compound_growth.append(compound_balance_chart)
+
+    chart_data = {
+        "Lãi đơn": simple_growth,
+        "Lãi kép": compound_growth
+    }
+
+    st.line_chart(chart_data)
+
+    # =====================================================
+    # 🎯 CHỨC NĂNG MỚI 2:
+    # MỤC TIÊU TÀI CHÍNH
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("🎯 Mục tiêu tài chính")
+
+    target_amount = st.number_input(
+        "Nhập số tiền mục tiêu muốn đạt được (VNĐ)",
+        min_value=0.0,
+        value=20_000_000.0,
+        step=1_000_000.0,
+        format="%.0f"
+    )
+
+    if target_amount > 0:
+
+        # Hệ số tăng trưởng lãi đơn
+        simple_factor = 1 + annual_rate * years
+
+        # Hệ số tăng trưởng lãi kép
+        if payment_method == "Lãnh lãi theo tháng":
+
+            compound_factor = (
+                1 + annual_rate / 12
+            ) ** term
+
+        elif payment_method == "Lãnh lãi theo quý":
+
+            compound_factor = (
+                (1 + annual_rate / 4) ** periods
+            )
+
+            if remaining_months > 0:
+                compound_factor *= (
+                    1
+                    + annual_rate * remaining_months / 12
+                )
+
+        else:
+
+            compound_factor = (
+                1 + annual_rate / 12
+            ) ** term
+
+        # Số tiền gốc cần có để đạt mục tiêu
+        required_simple = (
+            target_amount / simple_factor
+            if simple_factor > 0
+            else 0
+        )
+
+        required_compound = (
+            target_amount / compound_factor
+            if compound_factor > 0
+            else 0
+        )
+
+        target_col1, target_col2 = st.columns(2)
+
+        with target_col1:
+            st.metric(
+                "💵 Gốc cần có - Lãi đơn",
+                format_money(required_simple)
+            )
+
+        with target_col2:
+            st.metric(
+                "📈 Gốc cần có - Lãi kép",
+                format_money(required_compound)
+            )
+
+        # Kiểm tra khoản tiền hiện tại
+        if total_amount >= target_amount:
+
+            st.success(
+                f"🎉 Khoản tiền hiện tại **đạt mục tiêu "
+                f"{format_money(target_amount)}**!"
+            )
+
+        else:
+
+            missing_amount = target_amount - total_amount
+
+            st.warning(
+                f"⚠️ Khoản tiền hiện tại **chưa đạt mục tiêu**. "
+                f"Còn thiếu khoảng **{format_money(missing_amount)}**."
+            )
+
+    # =====================================================
+    # 💡 CHỨC NĂNG MỚI 3:
+    # PHÂN TÍCH TỰ ĐỘNG
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("💡 Phân tích kết quả")
+
+    interest_percentage = (
+        total_interest / principal * 100
+        if principal > 0
+        else 0
+    )
+
+    if interest_type == "Lãi kép":
+
+        st.write(
+            f"📈 Với **lãi kép**, khoản tiền của bạn tăng khoảng "
+            f"**{interest_percentage:.2f}%** so với số tiền gốc."
+        )
+
+        if compound_total > simple_total:
+            st.write(
+                f"💰 So với lãi đơn, lãi kép giúp khoản tiền cuối kỳ "
+                f"cao hơn khoảng **{format_money(difference)}**."
+            )
+
+    else:
+
+        st.write(
+            f"💵 Với **lãi đơn**, khoản tiền tăng khoảng "
+            f"**{interest_percentage:.2f}%** so với số tiền gốc."
+        )
+
+        if simple_total < compound_total:
+            st.write(
+                f"📊 Nếu chuyển sang lãi kép với cùng số tiền, "
+                f"kỳ hạn và lãi suất, số tiền cuối kỳ có thể cao hơn "
+                f"lãi đơn khoảng **{format_money(difference)}**."
+            )
+
+    if term >= 12:
+        st.write(
+            "⏳ Kỳ hạn từ 12 tháng trở lên nên tác động của "
+            "việc tái đầu tư tiền lãi trong mô hình lãi kép "
+            "thể hiện rõ hơn."
+        )
+    else:
+        st.write(
+            "⏱️ Với kỳ hạn ngắn, chênh lệch giữa lãi đơn và "
+            "lãi kép thường không quá lớn."
         )
 
     # =========================
